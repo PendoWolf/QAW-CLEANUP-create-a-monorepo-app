@@ -41,6 +41,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
+  // Identify the signed-in user to Pendo after sign-in, a restored session, or a profile change.
+  useEffect(() => {
+    if (!user || !account) {
+      return;
+    }
+    pendo.identify({
+      visitor: {
+        id: user.id,
+        email: user.email,
+        full_name: user.name,
+        accountId: user.accountId,
+        role: user.role,
+      },
+      account: {
+        id: account.id,
+        name: account.name,
+        plan: account.plan,
+        seats: account.seats,
+      },
+    });
+  }, [user, account]);
+
   const signIn = useCallback(async (email: string, password: string) => {
     const session = await authApi.signIn(email, password);
     saveSessionToken(session.token);
@@ -55,6 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearSessionToken();
       setUser(null);
       setAccount(null);
+      // Start a fresh anonymous Pendo visitor. clearSession is not queued by the install snippet, so skip it if the
+      // agent has not finished loading yet.
+      if (typeof pendo.clearSession === "function") {
+        pendo.clearSession();
+      }
     }
   }, []);
 
