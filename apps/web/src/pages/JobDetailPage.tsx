@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button, Notice, PageHeader } from "@crewdesk/ui";
+import { trackEvent } from "../analytics/pendo";
 import { customersApi } from "../api/customers";
 import { jobsApi } from "../api/jobs";
 import type { Customer, Job, JobFields } from "../api/types";
@@ -26,7 +27,23 @@ export function JobDetailPage() {
   const saveJob = async (fields: JobFields) => {
     try {
       setError(null);
-      setJob(await jobsApi.update(jobId, fields));
+      const previous = job;
+      const updated = await jobsApi.update(jobId, fields);
+      if (previous) {
+        // What the save changed: the job as it was before, compared with the submitted fields.
+        trackEvent("job_updated", {
+          jobId: updated.id,
+          previousStatus: previous.status,
+          newStatus: fields.status,
+          previousPriority: previous.priority,
+          newPriority: fields.priority,
+          statusChanged: previous.status !== fields.status,
+          priorityChanged: previous.priority !== fields.priority,
+          scheduleChanged: previous.scheduledFor !== fields.scheduledFor,
+          customerChanged: previous.customerId !== fields.customerId,
+        });
+      }
+      setJob(updated);
       setSaved(true);
     } catch (e) {
       setError((e as Error).message);
@@ -36,6 +53,16 @@ export function JobDetailPage() {
   const deleteJob = async () => {
     try {
       await jobsApi.remove(jobId);
+      if (job) {
+        // The state the job was in when it was deleted.
+        trackEvent("job_deleted", {
+          jobId: job.id,
+          status: job.status,
+          priority: job.priority,
+          scheduledFor: job.scheduledFor,
+          isAssigned: job.assignedUserId !== null,
+        });
+      }
       navigate("/jobs");
     } catch (e) {
       setError((e as Error).message);
