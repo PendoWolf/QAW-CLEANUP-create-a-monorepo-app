@@ -8,6 +8,9 @@ const SUGGESTED_PROMPTS = [
   "Draft a reminder for tomorrow's customers",
 ];
 
+// Pendo Agent Analytics ID for Crewdesk Copilot.
+const PENDO_AGENT_ID = "HWFIp12f0nBgJTI8J7eX0RXYIyo";
+
 function newConversationId(): string {
   return crypto.randomUUID();
 }
@@ -23,10 +26,18 @@ export function CopilotPanel({ onClose }: { onClose: () => void }) {
   const [thinking, setThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const send = async (text: string) => {
+  const send = async (text: string, suggestedPrompt = false) => {
     const prompt = text.trim();
     if (prompt === "" || thinking) return;
     const userMessage: ChatMessage = { id: crypto.randomUUID(), role: "user", content: prompt };
+    window.pendo?.trackAgent("prompt", {
+      agentId: PENDO_AGENT_ID,
+      conversationId,
+      messageId: userMessage.id,
+      content: prompt,
+      suggestedPrompt,
+      fileUploaded: false,
+    });
     const conversation = [...messages, userMessage];
     setMessages(conversation);
     setDraft("");
@@ -35,6 +46,12 @@ export function CopilotPanel({ onClose }: { onClose: () => void }) {
     try {
       const reply = await sendCopilotMessage(conversationId, conversation);
       setMessages((current) => [...current, reply.message]);
+      window.pendo?.trackAgent("agent_response", {
+        agentId: PENDO_AGENT_ID,
+        conversationId,
+        messageId: reply.message.id,
+        content: reply.message.content,
+      });
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -73,7 +90,7 @@ export function CopilotPanel({ onClose }: { onClose: () => void }) {
             Ask me about your schedule, your jobs or your customers.
             <div className="suggestions">
               {SUGGESTED_PROMPTS.map((prompt) => (
-                <Button key={prompt} variant="secondary" onClick={() => void send(prompt)}>
+                <Button key={prompt} variant="secondary" onClick={() => void send(prompt, true)}>
                   {prompt}
                 </Button>
               ))}
