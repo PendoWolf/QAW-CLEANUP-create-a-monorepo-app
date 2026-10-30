@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Button, Card, Notice, PageHeader, TextField } from "@crewdesk/ui";
+import { trackEvent } from "../analytics/pendo";
 import { authApi } from "../api/auth";
 import { useAuth } from "../auth/AuthContext";
 
@@ -15,7 +16,14 @@ export function SettingsPage() {
     setSaved(false);
     setError(null);
     try {
-      setUser(await authApi.updateProfile({ name, email }));
+      const updated = await authApi.updateProfile({ name, email });
+      // Only whether the name or email changed, never the values.
+      trackEvent("profile_updated", {
+        nameChanged: user?.name !== updated.name,
+        emailChanged: user?.email !== updated.email,
+        role: updated.role,
+      });
+      setUser(updated);
       setSaved(true);
     } catch (e) {
       setError((e as Error).message);

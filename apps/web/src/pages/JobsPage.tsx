@@ -1,10 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { DataTable, Notice, PageHeader, formatDate } from "@crewdesk/ui";
+import { trackEvent } from "../analytics/pendo";
 import { customersApi } from "../api/customers";
 import { jobsApi } from "../api/jobs";
 import type { Customer, Job, JobFields } from "../api/types";
 import { JobForm } from "../components/JobForm";
+
+/** Whole days from today until a job's scheduled date (negative when it's in the past). */
+function daysUntil(scheduledFor: string): number {
+  const scheduled = new Date(`${scheduledFor.slice(0, 10)}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((scheduled.getTime() - today.getTime()) / 86_400_000);
+}
 
 export function JobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -25,6 +34,17 @@ export function JobsPage() {
     try {
       setError(null);
       const job = await jobsApi.create(fields);
+      // The API accepted the job, so it is actually scheduled.
+      trackEvent("job_created", {
+        jobId: job.id,
+        priority: job.priority,
+        status: job.status,
+        scheduledFor: job.scheduledFor,
+        daysUntilScheduled: daysUntil(job.scheduledFor),
+        hasNotes: job.notes.trim() !== "",
+        isAssigned: job.assignedUserId !== null,
+        customerId: job.customerId,
+      });
       setJobs((current) => [...current, job].sort((a, b) => a.scheduledFor.localeCompare(b.scheduledFor)));
       setCreated(job.title);
     } catch (e) {

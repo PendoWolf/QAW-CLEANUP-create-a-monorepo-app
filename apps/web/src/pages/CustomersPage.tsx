@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { Button, DataTable, Notice, PageHeader } from "@crewdesk/ui";
+import { trackEvent } from "../analytics/pendo";
 import { customersApi } from "../api/customers";
 import type { Customer, CustomerFields } from "../api/types";
 import { CustomerForm } from "../components/CustomerForm";
+
+const CUSTOMER_FIELD_NAMES: (keyof CustomerFields)[] = ["name", "email", "phone", "address"];
 
 export function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -20,6 +23,13 @@ export function CustomersPage() {
     try {
       setError(null);
       const customer = await customersApi.create(fields);
+      // Only non-PII flags: never the name, email, phone or address themselves.
+      trackEvent("customer_created", {
+        customerId: customer.id,
+        hasPhone: customer.phone.trim() !== "",
+        hasAddress: customer.address.trim() !== "",
+        totalCustomerCount: customers.length + 1,
+      });
       setCustomers((current) => [...current, customer]);
     } catch (e) {
       setError((e as Error).message);
@@ -31,6 +41,13 @@ export function CustomersPage() {
     try {
       setError(null);
       const updated = await customersApi.update(editing.id, fields);
+      // The names of the fields that changed, never their values.
+      const changedFields = CUSTOMER_FIELD_NAMES.filter((key) => editing[key] !== fields[key]);
+      trackEvent("customer_updated", {
+        customerId: updated.id,
+        changedFields,
+        changedFieldCount: changedFields.length,
+      });
       setCustomers((current) => current.map((customer) => (customer.id === updated.id ? updated : customer)));
       setEditing(null);
     } catch (e) {

@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Button, Notice } from "@crewdesk/ui";
+import { trackEvent, truncateForTracking } from "../analytics/pendo";
 import { sendCopilotMessage, type ChatMessage } from "../api/copilot";
 
 const SUGGESTED_PROMPTS = [
@@ -23,7 +24,7 @@ export function CopilotPanel({ onClose }: { onClose: () => void }) {
   const [thinking, setThinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const send = async (text: string) => {
+  const send = async (text: string, promptSource: "typed" | "suggested") => {
     const prompt = text.trim();
     if (prompt === "" || thinking) return;
     const userMessage: ChatMessage = { id: crypto.randomUUID(), role: "user", content: prompt };
@@ -32,10 +33,32 @@ export function CopilotPanel({ onClose }: { onClose: () => void }) {
     setDraft("");
     setError(null);
     setThinking(true);
+    // Context for the copilot_reply_received Track Event, which fires once the model answers or fails.
+    const replyContext = {
+      conversationId,
+      turnIndex: conversation.filter((message) => message.role === "user").length,
+      messageCount: conversation.length,
+      promptSource,
+      promptLength: prompt.length,
+    };
+    const startedAt = performance.now();
     try {
       const reply = await sendCopilotMessage(conversationId, conversation);
+      trackEvent("copilot_reply_received", {
+        ...replyContext,
+        success: true,
+        replyLength: reply.message.content.length,
+        latencyMs: Math.round(performance.now() - startedAt),
+      });
       setMessages((current) => [...current, reply.message]);
     } catch (e) {
+      trackEvent("copilot_reply_received", {
+        ...replyContext,
+        success: false,
+        replyLength: 0,
+        latencyMs: Math.round(performance.now() - startedAt),
+        errorMessage: truncateForTracking((e as Error).message),
+      });
       setError((e as Error).message);
     } finally {
       setThinking(false);
@@ -44,7 +67,7 @@ export function CopilotPanel({ onClose }: { onClose: () => void }) {
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    void send(draft);
+    void send(draft, "typed");
   };
 
   const startNewChat = () => {
@@ -73,7 +96,7 @@ export function CopilotPanel({ onClose }: { onClose: () => void }) {
             Ask me about your schedule, your jobs or your customers.
             <div className="suggestions">
               {SUGGESTED_PROMPTS.map((prompt) => (
-                <Button key={prompt} variant="secondary" onClick={() => void send(prompt)}>
+                <Button key={prompt} variant="secondary" onClick={() => void send(prompt, "suggested")}>
                   {prompt}
                 </Button>
               ))}

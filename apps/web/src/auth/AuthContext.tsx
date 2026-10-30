@@ -11,7 +11,8 @@ interface AuthState {
   account: Account | null;
   /** True until the stored session has been checked with the API. */
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  /** Signs in, and resolves with who signed in and to which account. */
+  signIn: (email: string, password: string) => Promise<{ user: User; account: Account }>;
   signOut: () => Promise<void>;
   /** Replaces the signed-in user after a profile change. */
   setUser: (user: User) => void;
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     saveSessionToken(session.token);
     setUser(session.user);
     setAccount(session.account);
+    return { user: session.user, account: session.account };
   }, []);
 
   const signOut = useCallback(async () => {

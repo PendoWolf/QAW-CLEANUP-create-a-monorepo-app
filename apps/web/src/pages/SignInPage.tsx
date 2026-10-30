@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Button, Card, Notice, TextField } from "@crewdesk/ui";
+import { trackEvent } from "../analytics/pendo";
+import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
 
 export function SignInPage() {
@@ -20,11 +22,25 @@ export function SignInPage() {
     event.preventDefault();
     setSigningIn(true);
     setError(null);
+    const from = (location.state as { from?: string } | null)?.from ?? "/";
     try {
-      await signIn(email, password);
-      const from = (location.state as { from?: string } | null)?.from ?? "/";
+      const session = await signIn(email, password);
+      // The sign-in outcome. Never the email or password.
+      trackEvent("sign_in_completed", {
+        success: true,
+        role: session.user.role,
+        accountPlan: session.account.plan,
+        accountSeats: session.account.seats,
+        redirectedFrom: from,
+      });
       navigate(from, { replace: true });
     } catch (e) {
+      trackEvent("sign_in_completed", {
+        success: false,
+        redirectedFrom: from,
+        // 0 when the request never got an HTTP reply (for example the API is unreachable).
+        errorStatus: e instanceof ApiError ? e.status : 0,
+      });
       setError((e as Error).message);
     } finally {
       setSigningIn(false);
