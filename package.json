@@ -1,0 +1,21 @@
+{
+  "name": "crewdesk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Crewdesk: job management for field-service teams. npm-workspaces monorepo with the customer web app, the internal admin app, the API and a shared UI package.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web,admin -c blue,green,magenta \"npm:dev:api\" \"npm:dev:web\" \"npm:dev:admin\"",
+    "dev:api": "npm run dev --workspace @crewdesk/api",
+    "dev:web": "npm run dev --workspace @crewdesk/web",
+    "dev:admin": "npm run dev --workspace @crewdesk/admin",
+    "build": "npm run build --workspace @crewdesk/web && npm run build --workspace @crewdesk/admin && npm run typecheck --workspace @crewdesk/api",
+    "start": "npm run start --workspace @crewdesk/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

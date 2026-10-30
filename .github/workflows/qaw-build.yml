@@ -1,0 +1,21 @@
+# QA Wolf build check. On every pull request (GitHub runs it on the pull request merged into its base),
+# install every workspace clean (npm ci at the root) and run the root build: apps/web and apps/admin build, apps/api type-checks.
+# QA Wolf's flows assert this job's "qaw-build" check succeeded on each Novus pull request.
+name: qaw-build
+on:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  qaw-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Clean install
+        run: npm ci --no-audit --no-fund
+      - name: Build
+        run: npm run build

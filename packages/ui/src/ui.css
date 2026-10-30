@@ -1,0 +1,20 @@
+/* Styles for @crewdesk/ui's components. Each app imports this once. */
+.cd-button { font: inherit; padding: 0.5rem 0.9rem; border-radius: 8px; border: 1px solid transparent; cursor: pointer; }
+.cd-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.cd-button-primary { background: #0f766e; color: #fff; }
+.cd-button-secondary { background: transparent; color: #0f766e; border-color: #cbd5e1; }
+.cd-button-danger { background: #b91c1c; color: #fff; }
+.cd-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.cd-card-title { font-size: 1.05rem; margin: 0 0 0.75rem; }
+.cd-field { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.75rem; font-size: 0.9rem; }
+.cd-field input, .cd-field select { font: inherit; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 8px; }
+.cd-page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 1.25rem; }
+.cd-page-header h1 { margin: 0; }
+.cd-page-header p { margin: 0.25rem 0 0; color: #64748b; }
+.cd-page-header-actions { display: flex; gap: 0.5rem; }
+.cd-table { width: 100%; border-collapse: collapse; background: #fff; }
+.cd-table th, .cd-table td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid #e2e8f0; }
+.cd-empty { color: #64748b; }
+.cd-notice { margin: 0.5rem 0; }
+.cd-notice-error { color: #b91c1c; }
+.cd-notice-success { color: #15803d; }

@@ -1,0 +1,35 @@
+:root {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #0f172a;
+  background: #f8fafc;
+}
+body { margin: 0; }
+a { color: #0f766e; }
+.muted { color: #64748b; }
+.loading { padding: 2rem; color: #64748b; }
+.layout { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+.layout.with-copilot { grid-template-columns: 220px 1fr 360px; }
+.sidebar { display: flex; flex-direction: column; gap: 0.5rem; padding: 1.25rem 1rem; background: #0f172a; }
+.sidebar a { color: #cbd5e1; text-decoration: none; padding: 0.35rem 0.5rem; border-radius: 6px; }
+.sidebar a.active { background: #1e293b; color: #fff; }
+.brand { color: #fff; font-size: 1.2rem; margin-bottom: 1rem; }
+.signed-in { margin-top: auto; display: flex; flex-direction: column; gap: 0.25rem; color: #fff; }
+.content { max-width: 880px; width: 100%; margin: 0 auto; padding: 2rem 1.25rem; }
+.copilot-launcher { display: flex; justify-content: flex-end; }
+.row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end; }
+.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+.stat { font-size: 2rem; margin: 0; }
+.plain-list { margin: 0; padding-left: 1.1rem; }
+.sign-in { max-width: 380px; margin: 4rem auto; }
+.copilot { border-left: 1px solid #e2e8f0; background: #fff; display: flex; flex-direction: column; height: 100vh; position: sticky; top: 0; }
+.copilot header { display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; border-bottom: 1px solid #e2e8f0; }
+.copilot header div { display: flex; gap: 0.5rem; }
+.messages { flex: 1; overflow-y: auto; list-style: none; margin: 0; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.message { padding: 0.5rem 0.75rem; border-radius: 10px; max-width: 85%; white-space: pre-wrap; }
+.message.user { align-self: flex-end; background: #0f766e; color: #fff; }
+.message.assistant { align-self: flex-start; background: #f1f5f9; }
+.hint { color: #64748b; }
+.suggestions { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem; }
+.copilot form { display: flex; gap: 0.5rem; padding: 1rem; border-top: 1px solid #e2e8f0; }
+.copilot textarea { flex: 1; resize: none; font: inherit; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 8px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
